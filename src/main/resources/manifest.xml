@@ -8,13 +8,13 @@
 	version="0.1">
 
     <uses-sdk 
-		minSdkVersion="0.1.2"
-		targetSdkVersion="0.1.2"/>
+		minSdkVersion="0"
+		targetSdkVersion=""/>
 
 	<inputs>
 		<!-- remove input tag if no input types are needed -->
-		<input input-type="handtracking" />
-	</inputs>
+        <input optional="true" input-type="handtracking"/>
+    </inputs>
 	<requires-module>
 	</requires-module>
 

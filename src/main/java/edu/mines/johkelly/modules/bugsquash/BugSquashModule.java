@@ -1,9 +1,18 @@
 package edu.mines.johkelly.modules.bugsquash;
 
+import edu.mines.acmX.exhibit.input_services.hardware.BadFunctionalityRequestException;
+import edu.mines.acmX.exhibit.input_services.hardware.HardwareManager;
+import edu.mines.acmX.exhibit.input_services.hardware.HardwareManagerManifestException;
+import edu.mines.acmX.exhibit.input_services.hardware.UnknownDriverRequest;
+import edu.mines.acmX.exhibit.input_services.hardware.devicedata.GestureTrackerInterface;
+import edu.mines.acmX.exhibit.input_services.hardware.devicedata.HandTrackerInterface;
+import edu.mines.acmX.exhibit.input_services.hardware.drivers.InvalidConfigurationFileException;
 import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
 
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
+import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.GestureReceiver;
+import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
 import processing.core.PImage;
 
 import java.util.*;
@@ -19,12 +28,41 @@ public class BugSquashModule extends ProcessingModule {
     private PImage bugSprite;
 
     private int framesSinceLastBug = 0;
+	private GestureReceiver receiver;
+	private HandReceiver handRecv;
 
     @Override
     public void setup() {
         size(getWidth(), getHeight());
         bugSprite = loadImage("bug.png");
         frameRate(expFPS);
+
+	    HardwareManager hm;
+	    try {
+		    hm = HardwareManager.getInstance();
+		    receiver = new SquashReciever(this);
+		    handRecv = new SquashHandRecevier(this);
+
+//		    GestureTrackerInterface gestDriver = (GestureTrackerInterface) hm.getInitialDriver("gesturetracking");
+//		    gestDriver.registerGestureRecognized(receiver);
+
+		    HandTrackerInterface handDriver = (HandTrackerInterface) hm.getInitialDriver("handtracking");
+		    handDriver.registerHandCreated(handRecv);
+		    handDriver.registerHandUpdated(handRecv);
+		    handDriver.registerHandDestroyed(handRecv);
+
+	    } catch (HardwareManagerManifestException e){
+		    e.printStackTrace();
+	    }   catch (BadFunctionalityRequestException e) {
+		    // TODO Auto-generated catch block
+		    e.printStackTrace();
+	    } catch (UnknownDriverRequest e) {
+		    // TODO Auto-generated catch block
+		    e.printStackTrace();
+	    } catch (InvalidConfigurationFileException e) {
+		    // TODO Auto-generated catch block
+		    e.printStackTrace();
+	    }
     }
 
     public void update() {
