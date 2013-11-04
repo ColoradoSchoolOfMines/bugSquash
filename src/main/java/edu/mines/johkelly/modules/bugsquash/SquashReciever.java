@@ -36,9 +36,6 @@ public class SquashReciever extends GestureReceiver {
 		int x = (int) picked.getX();
 		int y = (int) picked.getY();
 
-		System.out.println("x: " + x + ", y: " + y);
-
-
 		theGame.squash(x, y);
 	}
 }
