@@ -12,30 +12,32 @@ import processing.core.PImage;
  * To change this template use File | Settings | File Templates.
  */
 public class Bug {
-    private int x, y;
+    public int x, y;
     private float rotRadians;
     private PImage sprite;
 
     private static final int SPEED = 10;
 
-    public Bug(int x, int y, float rotRadians){
+    public Bug(int x, int y, float rotRadians, PImage sprite){
         this.x = x;
         this.y = y;
         this.rotRadians = rotRadians;
+        this.sprite = sprite;
     }
 
     public void update(){
-        x += SPEED * Math.cos(rotRadians);
-        y += SPEED * Math.sin(rotRadians);
+        // 0rad in Processing coordinates points up, not right
+        x += SPEED * Math.sin(rotRadians);
+        y -= SPEED * Math.cos(rotRadians);
     }
 
     public void draw(PApplet canvas){
         canvas.imageMode(PConstants.CENTER);
-        canvas.translate(x/2, y/2);
+        canvas.pushMatrix();
+        canvas.translate(x, y);
         canvas.rotate(rotRadians);
         canvas.image(sprite, 0, 0);
-        canvas.rotate(-rotRadians);
-        canvas.translate(-x/2, -y/2);
+        canvas.popMatrix();
         canvas.imageMode(PConstants.CORNER);
     }
 }
