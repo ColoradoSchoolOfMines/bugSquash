@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+	package="edu.mines.johkelly.modules.bugsquash"
+	class="BugSquashModule"
+	icon="squash_icon.png"
+	title="Bug Squash"
+	author="John Kelly"
+	version="0.1">
+
+    <uses-sdk 
+		minSdkVersion="0.1.2"
+		targetSdkVersion="0.1.2"/>
+
+	<inputs>
+		<!-- remove input tag if no input types are needed -->
+		<input input-type="handtracking" />
+	</inputs>
+	<requires-module>
+	</requires-module>
+
+</manifest>
+<!-- vim:fenc=utf-8
+  -->
