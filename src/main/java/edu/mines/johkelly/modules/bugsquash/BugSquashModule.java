@@ -11,10 +11,11 @@ import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
 
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
+import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.GestureReceiver;
 import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
 import processing.core.PImage;
-
+import java.awt.geom.Point2D;
 import java.util.*;
 
 public class BugSquashModule extends ProcessingModule {
@@ -26,6 +27,7 @@ public class BugSquashModule extends ProcessingModule {
     private List<Bug> bugs = new ArrayList<Bug>();
     private final List<Splat> splats = new ArrayList<Splat>();
     private PImage bugSprite;
+	private PImage handSprite;
 
     private int framesSinceLastBug = 0;
 	private GestureReceiver receiver;
@@ -33,25 +35,30 @@ public class BugSquashModule extends ProcessingModule {
 	HandTrackerInterface handDriver;
 	GestureTrackerInterface gestDriver;
 
+	Map<Integer, Coordinate3D> hands = new HashMap<Integer, Coordinate3D>();
+
     @Override
     public void setup() {
         size(getWidth(), getHeight());
         bugSprite = loadImage("bug.png");
+	    handSprite = loadImage("fist.png");
+	    handSprite.resize(200, 200);
         frameRate(expFPS);
 
 	    HardwareManager hm;
 	    try {
 		    hm = HardwareManager.getInstance();
-		    receiver = new SquashReciever(this);
-		    handRecv = new SquashHandRecevier(this);
+		    handDriver = (HandTrackerInterface) hm.getInitialDriver("handtracking");
+
+		    receiver = new SquashReciever(this, handDriver, this);
+		    handRecv = new SquashHandRecevier(this, hands);
 
 		    gestDriver = (GestureTrackerInterface) hm.getInitialDriver("gesturetracking");
 		    gestDriver.registerGestureRecognized(receiver);
 
-//		    handDriver = (HandTrackerInterface) hm.getInitialDriver("handtracking");
-//		    handDriver.registerHandCreated(handRecv);
-//		    handDriver.registerHandUpdated(handRecv);
-//		    handDriver.registerHandDestroyed(handRecv);
+		    handDriver.registerHandCreated(handRecv);
+		    handDriver.registerHandUpdated(handRecv);
+		    handDriver.registerHandDestroyed(handRecv);
 
 	    } catch (HardwareManagerManifestException e){
 		    e.printStackTrace();
@@ -69,7 +76,7 @@ public class BugSquashModule extends ProcessingModule {
 
     public void update() {
 
-	    //handDriver.updateDriver();
+	    handDriver.updateDriver();
 	    gestDriver.updateDriver();
 
         framesSinceLastBug++;
@@ -100,6 +107,11 @@ public class BugSquashModule extends ProcessingModule {
                 s.draw(this);
             }
         }
+
+	    for(Coordinate3D p : hands.values()){
+		    Hand.draw(this, handSprite, p, handDriver);
+	    }
+
         fill(color(0));
     }
 
@@ -150,7 +162,7 @@ public class BugSquashModule extends ProcessingModule {
             // distance between squash point and bug position
             double dist = Math.sqrt(Math.pow(b.x - x, 2) + Math.pow(b.y - y, 2));
             // The height is the larger graphic dimension, so players can "fat finger" a bit off target
-            if (dist < bugSprite.height / 2) {
+            if (dist < bugSprite.height) {
                 iter.remove();
                 // Spawn a new splat to display
                 String splatGraphicName = "splat" + (int) (random(3) + 1) + ".png";

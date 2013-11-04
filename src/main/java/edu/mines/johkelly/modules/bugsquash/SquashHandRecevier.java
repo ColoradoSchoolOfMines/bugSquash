@@ -4,6 +4,9 @@ import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
 import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
 
+import java.awt.geom.Point2D;
+import java.util.*;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Matt
@@ -12,41 +15,40 @@ import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
  */
 public class SquashHandRecevier extends HandReceiver {
 	private BugSquashModule theGame;
+	Map<Integer, Coordinate3D> hands;
 
-	private int ID = -1;
-	private Coordinate3D pos = null;
+	Timer timey = new Timer();
 
-
-
-	public SquashHandRecevier(BugSquashModule instance) {
+	public SquashHandRecevier(BugSquashModule instance, Map<Integer, Coordinate3D> hands) {
 		this.theGame = instance;
+		this.hands = hands;
 	}
 
 	public void handCreated(HandPosition handPos) {
-		System.out.println("EGRDSRE");
-		if(ID == -1){
-			System.out.println("EGRDSRE");
-			ID = handPos.getId();
-			pos = handPos.getPosition();
-			doSquash();
-		}
+		if(timey != null)
+			timey.cancel();
+		timey = null;
+		hands.put(handPos.getId(), handPos.getPosition());
 	}
 
 	public void handDestroyed(int id) {
-		if(id == ID)
-			ID = -1;
+		hands.remove(id);
+		if(hands.isEmpty()) {
+	        timey = new Timer();
+			timey.schedule(
+					new TimerTask() {
+						@Override
+						public void run() {
+							theGame.exit();
+						}
+					},
+					5000
+			);
+		}
 	}
 
 	@Override
 	public void handUpdated(HandPosition pos) {
-		if (ID == pos.getId()) {
-			this.pos = pos.getPosition();
-			doSquash();
-		}
+		hands.put(pos.getId(), pos.getPosition());
 	}
-
-	void doSquash(){
-		theGame.squash((int)pos.getX(), (int)pos.getY());
-	}
-
 }
