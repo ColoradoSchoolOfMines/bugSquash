@@ -29,7 +29,9 @@ public class BugSquashModule extends ProcessingModule {
 
     private int framesSinceLastBug = 0;
 	private GestureReceiver receiver;
-	private HandReceiver handRecv;
+	private SquashHandRecevier handRecv;
+	HandTrackerInterface handDriver;
+	GestureTrackerInterface gestDriver;
 
     @Override
     public void setup() {
@@ -43,13 +45,13 @@ public class BugSquashModule extends ProcessingModule {
 		    receiver = new SquashReciever(this);
 		    handRecv = new SquashHandRecevier(this);
 
-//		    GestureTrackerInterface gestDriver = (GestureTrackerInterface) hm.getInitialDriver("gesturetracking");
-//		    gestDriver.registerGestureRecognized(receiver);
+		    gestDriver = (GestureTrackerInterface) hm.getInitialDriver("gesturetracking");
+		    gestDriver.registerGestureRecognized(receiver);
 
-		    HandTrackerInterface handDriver = (HandTrackerInterface) hm.getInitialDriver("handtracking");
-		    handDriver.registerHandCreated(handRecv);
-		    handDriver.registerHandUpdated(handRecv);
-		    handDriver.registerHandDestroyed(handRecv);
+//		    handDriver = (HandTrackerInterface) hm.getInitialDriver("handtracking");
+//		    handDriver.registerHandCreated(handRecv);
+//		    handDriver.registerHandUpdated(handRecv);
+//		    handDriver.registerHandDestroyed(handRecv);
 
 	    } catch (HardwareManagerManifestException e){
 		    e.printStackTrace();
@@ -66,6 +68,10 @@ public class BugSquashModule extends ProcessingModule {
     }
 
     public void update() {
+
+	    //handDriver.updateDriver();
+	    gestDriver.updateDriver();
+
         framesSinceLastBug++;
         // Spawn one bug every second
         if (framesSinceLastBug % (expFPS) == 0) {
