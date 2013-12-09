@@ -13,8 +13,8 @@
 
 	<inputs>
 		<!-- remove input tag if no input types are needed -->
-        <input optional="true" input-type="handtracking"/>
-        <input optional="true" input-type="gesturetracking"/>
+        <input input-type="handtracking"/>
+        <input input-type="gesturetracking"/>
     </inputs>
 	<requires-module>
 	</requires-module>
