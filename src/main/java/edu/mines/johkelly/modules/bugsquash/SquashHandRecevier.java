@@ -39,7 +39,7 @@ public class SquashHandRecevier extends HandReceiver {
 					new TimerTask() {
 						@Override
 						public void run() {
-							theGame.exit();
+							theGame.destroy();
 						}
 					},
 					5000
