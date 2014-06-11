@@ -22,56 +22,57 @@ public class BugSquashModule extends ProcessingModule {
     // private Logger log = LogManager.getLogger(BugSquashModule.class);
 
     private List<Bug> bugs = new ArrayList<Bug>();
+    private Set<Bug> bugsToRemove = new HashSet<Bug>();
     private final List<Splat> splats = new ArrayList<Splat>();
     private PImage bugSprite;
-	private PImage handSprite;
+    private PImage handSprite;
 
     private int framesSinceLastBug = 0;
-	private GestureReceiver receiver;
-	private SquashHandRecevier handRecv;
-	HandTrackerInterface handDriver;
-	GestureTrackerInterface gestDriver;
+    private GestureReceiver receiver;
+    private SquashHandRecevier handRecv;
+    HandTrackerInterface handDriver;
+    GestureTrackerInterface gestDriver;
 
-	Map<Integer, Coordinate3D> hands = new HashMap<Integer, Coordinate3D>();
+    Map<Integer, Coordinate3D> hands = new HashMap<Integer, Coordinate3D>();
 
     @Override
     public void setup() {
         size(getWidth(), getHeight());
         bugSprite = loadImage("bug.png");
-	    handSprite = loadImage("fist.png");
-	    handSprite.resize(200, 200);
+        handSprite = loadImage("fist.png");
+        handSprite.resize(200, 200);
         frameRate(expFPS);
 
-	    try {
-		    handDriver = (HandTrackerInterface) getInitialDriver("handtracking");
+        try {
+            handDriver = (HandTrackerInterface) getInitialDriver("handtracking");
 
-		    receiver = new SquashReciever(this, handDriver, this);
-		    handRecv = new SquashHandRecevier(this, hands);
+            receiver = new SquashReciever(this, handDriver, this);
+            handRecv = new SquashHandRecevier(this, hands);
 
-		    gestDriver = (GestureTrackerInterface) getInitialDriver("gesturetracking");
-		    gestDriver.registerGestureRecognized(receiver);
+            gestDriver = (GestureTrackerInterface) getInitialDriver("gesturetracking");
+            gestDriver.registerGestureRecognized(receiver);
 
-		    handDriver.registerHandCreated(handRecv);
-		    handDriver.registerHandUpdated(handRecv);
-		    handDriver.registerHandDestroyed(handRecv);
+            handDriver.registerHandCreated(handRecv);
+            handDriver.registerHandUpdated(handRecv);
+            handDriver.registerHandDestroyed(handRecv);
 
-	    } catch (BadFunctionalityRequestException e) {
-		    e.printStackTrace();
-	    } catch (UnknownDriverRequest e) {
-		    e.printStackTrace();
-	    } catch (InvalidConfigurationFileException e) {
-		    e.printStackTrace();
-	    } catch (RemoteException e) {
-		    e.printStackTrace();
-	    } catch (BadDeviceFunctionalityRequestException e) {
-		    e.printStackTrace();
-	    }
+        } catch (BadFunctionalityRequestException e) {
+            e.printStackTrace();
+        } catch (UnknownDriverRequest e) {
+            e.printStackTrace();
+        } catch (InvalidConfigurationFileException e) {
+            e.printStackTrace();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (BadDeviceFunctionalityRequestException e) {
+            e.printStackTrace();
+        }
     }
 
     public void update() {
 
-	    handDriver.updateDriver();
-	    gestDriver.updateDriver();
+        handDriver.updateDriver();
+        gestDriver.updateDriver();
 
         framesSinceLastBug++;
         // Spawn one bug every second
@@ -80,12 +81,17 @@ public class BugSquashModule extends ProcessingModule {
             framesSinceLastBug = 0;
         }
         // Update each bug's position and remove it if it is too far offscreen
-        for (Iterator<Bug> iter = bugs.iterator(); iter.hasNext(); /**/) {
-            Bug b = iter.next();
-            b.update();
-            if (!inBounds(b)) {
-                iter.remove();
+        synchronized(bugsToRemove) {
+            for (Bug b : bugs) {
+                b.update();
+                if (!inBounds(b)) {
+                    bugsToRemove.add(b);
+                }
             }
+            for(Bug b : bugsToRemove) {
+                bugs.remove(b);
+            }
+            bugsToRemove.clear();
         }
     }
 
@@ -102,9 +108,9 @@ public class BugSquashModule extends ProcessingModule {
             }
         }
 
-	    for(Coordinate3D p : hands.values()){
-		    Hand.draw(this, handSprite, p, handDriver);
-	    }
+        for(Coordinate3D p : hands.values()){
+            Hand.draw(this, handSprite, p, handDriver);
+        }
 
         fill(color(0));
     }
@@ -151,17 +157,20 @@ public class BugSquashModule extends ProcessingModule {
 
     public void squash(int x, int y) {
         // Test all bugs for collision
-        for (Iterator<Bug> iter = bugs.iterator(); iter.hasNext(); /**/) {
-            Bug b = iter.next();
+        for (Bug b : bugs) {
             // distance between squash point and bug position
             double dist = Math.sqrt(Math.pow(b.x - x, 2) + Math.pow(b.y - y, 2));
             // The height is the larger graphic dimension, so players can "fat finger" a bit off target
             if (dist < bugSprite.height) {
-                iter.remove();
+                synchronized(bugsToRemove) {
+                    bugsToRemove.add(b);
+                }
                 // Spawn a new splat to display
                 String splatGraphicName = "splat" + (int) (random(3) + 1) + ".png";
                 final Splat s = new Splat(b.x, b.y, loadImage(splatGraphicName));
-                splats.add(s);
+                synchronized(splats) {
+                    splats.add(s);
+                }
                 // Schedule synchronized deletion of the graphic 2 seconds later
                 new Timer().schedule(
                         new TimerTask() {
@@ -176,5 +185,9 @@ public class BugSquashModule extends ProcessingModule {
                 );
             }
         }
+    }
+
+    public HandTrackerInterface getHandDriver() {
+        return handDriver;
     }
 }

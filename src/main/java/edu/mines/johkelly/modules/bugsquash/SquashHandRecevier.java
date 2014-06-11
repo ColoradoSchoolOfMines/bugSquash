@@ -14,41 +14,42 @@ import java.util.*;
  * Time: 11:31 PM
  */
 public class SquashHandRecevier extends HandReceiver {
-	private BugSquashModule theGame;
-	Map<Integer, Coordinate3D> hands;
+    private BugSquashModule theGame;
+    Map<Integer, Coordinate3D> hands;
 
-	Timer timey = new Timer();
+    Timer timey = new Timer();
 
-	public SquashHandRecevier(BugSquashModule instance, Map<Integer, Coordinate3D> hands) {
-		this.theGame = instance;
-		this.hands = hands;
-	}
+    public SquashHandRecevier(BugSquashModule instance, Map<Integer, Coordinate3D> hands) {
+        this.theGame = instance;
+        this.hands = hands;
+    }
 
-	public void handCreated(HandPosition handPos) {
-		if(timey != null)
-			timey.cancel();
-		timey = null;
-		hands.put(handPos.getId(), handPos.getPosition());
-	}
+    public void handCreated(HandPosition handPos) {
+        if(timey != null)
+            timey.cancel();
+        timey = null;
+        hands.put(handPos.getId(), handPos.getPosition());
+    }
 
-	public void handDestroyed(int id) {
-		hands.remove(id);
-		if(hands.isEmpty()) {
-	        timey = new Timer();
-			timey.schedule(
-					new TimerTask() {
-						@Override
-						public void run() {
-							theGame.destroy();
-						}
-					},
-					5000
-			);
-		}
-	}
+    public void handDestroyed(int id) {
+        hands.remove(id);
+        if(hands.isEmpty()) {
+            timey = new Timer();
+            timey.schedule(
+                    new TimerTask() {
+                        @Override
+                        public void run() {
+                            theGame.getHandDriver().clearAllHands();
+                            theGame.destroy();
+                        }
+                    },
+                    5000
+            );
+        }
+    }
 
-	@Override
-	public void handUpdated(HandPosition pos) {
-		hands.put(pos.getId(), pos.getPosition());
-	}
+    @Override
+    public void handUpdated(HandPosition pos) {
+        hands.put(pos.getId(), pos.getPosition());
+    }
 }
