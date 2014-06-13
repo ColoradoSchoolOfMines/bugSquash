@@ -32,6 +32,7 @@ public class BugSquashModule extends ProcessingModule {
 	private SquashHandRecevier handRecv;
 	HandTrackerInterface handDriver;
 	GestureTrackerInterface gestDriver;
+	private volatile int lastUseful;
 
 	Map<Integer, Coordinate3D> hands = new HashMap<Integer, Coordinate3D>();
 
@@ -67,10 +68,14 @@ public class BugSquashModule extends ProcessingModule {
 		} catch (BadDeviceFunctionalityRequestException e) {
 			e.printStackTrace();
 		}
+		lastUseful = millis() + 20000;
 	}
 
 	public void update() {
-
+		if(millis() - lastUseful > 5000) {
+			handDriver.clearAllHands();
+			destroy();
+		}
 		handDriver.updateDriver();
 		gestDriver.updateDriver();
 
@@ -189,5 +194,9 @@ public class BugSquashModule extends ProcessingModule {
 
 	public HandTrackerInterface getHandDriver() {
 		return handDriver;
+	}
+
+	public void usefulUpdate() {
+		lastUseful = millis();
 	}
 }

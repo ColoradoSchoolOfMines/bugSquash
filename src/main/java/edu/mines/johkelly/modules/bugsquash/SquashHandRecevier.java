@@ -17,23 +17,29 @@ public class SquashHandRecevier extends HandReceiver {
 	private BugSquashModule theGame;
 	Map<Integer, Coordinate3D> hands;
 
-	Timer timey = new Timer();
-
 	public SquashHandRecevier(BugSquashModule instance, Map<Integer, Coordinate3D> hands) {
 		this.theGame = instance;
 		this.hands = hands;
 	}
 
 	public void handCreated(HandPosition handPos) {
-		if(timey != null)
-			timey.cancel();
-		timey = null;
+		System.out.println(new Throwable().getStackTrace()[0]);
 		hands.put(handPos.getId(), handPos.getPosition());
+		theGame.usefulUpdate();
 	}
 
 	public void handDestroyed(int id) {
 		hands.remove(id);
-		if(hands.isEmpty()) {
+	}
+
+	@Override
+	public void handUpdated(HandPosition pos) {
+		hands.put(pos.getId(), pos.getPosition());
+		if(hands.containsKey(pos.getId())) theGame.usefulUpdate();
+	}
+/*
+	private synchronized void scheduleExit() {
+		if(timey == null) {
 			timey = new Timer();
 			timey.schedule(
 					new TimerTask() {
@@ -48,8 +54,10 @@ public class SquashHandRecevier extends HandReceiver {
 		}
 	}
 
-	@Override
-	public void handUpdated(HandPosition pos) {
-		hands.put(pos.getId(), pos.getPosition());
-	}
+	private synchronized void cancelExit() {
+		if(timey != null) {
+			timey.cancel();
+			timey = null;
+		}
+	}*/
 }
